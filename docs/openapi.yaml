@@ -1,0 +1,461 @@
+openapi: 3.0.3
+info:
+  title: PrimeStudy API
+  version: "1.0.0"
+  description: |
+    API REST do PrimeStudy — plataforma que transforma PDFs de estudo em
+    conteúdo gerado por IA (resumo, tópicos, flashcards, quiz, mapa mental)
+    e organiza o material por matérias.
+
+    ## Estilo e justificativa (Trabalho Final, Seção 7)
+    REST sobre JSON. Escolhido em vez de GraphQL/gRPC porque os recursos do
+    domínio (estudo, matéria, checklist) mapeiam naturalmente para recursos
+    HTTP com operações CRUD, o consumidor é um frontend web simples, e o
+    custo cognitivo/ferramental do REST é o menor para uma equipe iniciante.
+    Ver ADR-005.
+
+    ## Versionamento
+    Por **header**: o servidor responde sempre com `X-API-Version: v1`.
+    Optou-se por header em vez de prefixo de URL para manter as URLs estáveis
+    e coerentes com os exemplos de `docs/quality.md` (`/api/estudos/...`).
+    Uma futura `v2` incompatível seria negociada via header de requisição,
+    sem quebrar clientes existentes.
+
+    ## Autenticação
+    Sessão server-side via cookie assinado. O cliente obtém a sessão em
+    `POST /api/sessao`, trocando um `idToken` do Firebase Authentication
+    (verificado no backend) por um cookie. No **modo demo** a verificação é
+    dispensada e um usuário fixo é usado. Ver ADR-003.
+
+    ## Convenção de erros
+    Todo erro retorna JSON `{ "erro": <mensagem>, "codigo": <slug> }`.
+    - 400 `REQUISICAO_INVALIDA` — entrada inválida ou regra de negócio violada.
+    - 401 `NAO_AUTENTICADO` — sem sessão válida.
+    - 404 — recurso inexistente.
+    - 502 `FALHA_DEPENDENCIA` — falha em serviço externo (IA, parser de PDF).
+    - 500 `ERRO_INTERNO` — erro inesperado.
+
+    ## Paginação
+    Listagens aceitam `limite` (1–100, padrão 50) e `offset` (>=0, padrão 0).
+
+servers:
+  - url: http://localhost:5000
+    description: Desenvolvimento local
+
+tags:
+  - name: Autenticação
+  - name: Estudos
+  - name: Conteúdo
+  - name: Checklist
+  - name: Matérias
+
+components:
+  securitySchemes:
+    sessaoCookie:
+      type: apiKey
+      in: cookie
+      name: session
+      description: Cookie de sessão Flask assinado, emitido por POST /api/sessao.
+
+  parameters:
+    Limite:
+      name: limite
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+      description: Quantidade máxima de itens retornados.
+    Offset:
+      name: offset
+      in: query
+      schema: { type: integer, minimum: 0, default: 0 }
+      description: Quantos itens pular antes de começar a página.
+
+  schemas:
+    Erro:
+      type: object
+      required: [erro, codigo]
+      properties:
+        erro:   { type: string, example: "Estudo 'x' não encontrado." }
+        codigo: { type: string, example: "REQUISICAO_INVALIDA" }
+
+    ItemChecklist:
+      type: object
+      required: [texto, feito]
+      properties:
+        texto: { type: string, example: "Conceitos fundamentais" }
+        feito: { type: boolean, example: false }
+
+    Estudo:
+      type: object
+      properties:
+        id:            { type: string, example: "estudo-1" }
+        nome:          { type: string, example: "Aula 1 - Derivadas" }
+        materia_id:    { type: string, nullable: true, example: "materia-1" }
+        criado_em:     { type: string, format: date-time, nullable: true }
+        tipos_gerados: { type: array, items: { type: string }, example: ["resumo", "questoes"] }
+        checklist:
+          type: array
+          items: { $ref: '#/components/schemas/ItemChecklist' }
+        texto:    { type: string, description: "Texto bruto do PDF (apenas no detalhe)." }
+        conteudo:
+          type: object
+          additionalProperties: { type: string }
+          description: "Mapa tipo→conteúdo gerado (apenas no detalhe)."
+
+    Materia:
+      type: object
+      properties:
+        id:            { type: string, example: "materia-1" }
+        nome:          { type: string, example: "Cálculo I" }
+        cor:           { type: string, example: "c-blue" }
+        total_estudos: { type: integer, example: 3 }
+
+  responses:
+    NaoAutenticado:
+      description: Sessão ausente ou inválida.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Erro' }
+    RequisicaoInvalida:
+      description: Entrada inválida ou regra de negócio violada.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Erro' }
+    NaoEncontrado:
+      description: Recurso não encontrado.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Erro' }
+
+security:
+  - sessaoCookie: []
+
+paths:
+  /api/health:
+    get:
+      tags: [Autenticação]
+      summary: Verificação de saúde do serviço.
+      security: []
+      responses:
+        '200':
+          description: Serviço no ar.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                  modo:   { type: string, example: demo }
+
+  /api/sessao:
+    post:
+      tags: [Autenticação]
+      summary: Cria a sessão a partir de um idToken do Firebase.
+      security: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idToken:
+                  type: string
+                  description: idToken do Firebase. Ignorado no modo demo.
+      responses:
+        '200':
+          description: Sessão criada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uid:  { type: string }
+                  modo: { type: string, enum: [demo, real] }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+    delete:
+      tags: [Autenticação]
+      summary: Encerra a sessão (logout).
+      responses:
+        '204': { description: Sessão encerrada. }
+
+  /api/estudos:
+    get:
+      tags: [Estudos]
+      summary: Lista os estudos recentes do usuário.
+      parameters:
+        - $ref: '#/components/parameters/Limite'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Página de estudos.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  estudos:         { type: array, items: { $ref: '#/components/schemas/Estudo' } }
+                  limite:          { type: integer }
+                  offset:          { type: integer }
+                  total_retornado: { type: integer }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+    post:
+      tags: [Estudos]
+      summary: Cria um estudo a partir do upload de um PDF.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [arquivo]
+              properties:
+                arquivo:    { type: string, format: binary, description: "Arquivo PDF com texto selecionável." }
+                materia_id: { type: string, description: "Matéria a vincular (opcional)." }
+      responses:
+        '201':
+          description: Estudo criado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  estudo_id:    { type: string }
+                  redirect_url: { type: string }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+        '502':
+          description: Falha ao processar o PDF.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Erro' }
+
+  /api/estudos/{estudo_id}:
+    parameters:
+      - name: estudo_id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Estudos]
+      summary: Detalha um estudo (inclui texto e conteúdo gerado).
+      responses:
+        '200':
+          description: Estudo encontrado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Estudo' }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+    patch:
+      tags: [Estudos]
+      summary: Renomeia um estudo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome]
+              properties:
+                nome: { type: string }
+      responses:
+        '200':
+          description: Renomeado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:   { type: string }
+                  nome: { type: string }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+    delete:
+      tags: [Estudos]
+      summary: Remove um estudo.
+      responses:
+        '204': { description: Removido. }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+
+  /api/estudos/{estudo_id}/conteudo:
+    parameters:
+      - name: estudo_id
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      tags: [Conteúdo]
+      summary: Gera ou amplia um tipo de conteúdo via IA.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tipo]
+              properties:
+                tipo:
+                  type: string
+                  enum: [resumo, resumo_menor, topicos, flashcard, questoes, questoes_resumo, mapa]
+                acao:
+                  type: string
+                  enum: [novo, mais]
+                  default: novo
+      responses:
+        '200':
+          description: Conteúdo gerado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  conteudo:    { type: string }
+                  tipo_render: { type: string }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+        '502':
+          description: Falha na geração pela IA.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Erro' }
+
+  /api/estudos/{estudo_id}/checklist:
+    parameters:
+      - name: estudo_id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Checklist]
+      summary: Obtém a checklist de tópicos (gera na primeira vez).
+      responses:
+        '200':
+          description: Checklist do estudo.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  itens: { type: array, items: { $ref: '#/components/schemas/ItemChecklist' } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+    put:
+      tags: [Checklist]
+      summary: Salva o estado da checklist (itens marcados).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [itens]
+              properties:
+                itens: { type: array, items: { $ref: '#/components/schemas/ItemChecklist' } }
+      responses:
+        '204': { description: Checklist salva. }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+
+  /api/estudos/{estudo_id}/materia:
+    parameters:
+      - name: estudo_id
+        in: path
+        required: true
+        schema: { type: string }
+    put:
+      tags: [Estudos]
+      summary: Vincula ou desvincula o estudo de uma matéria.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                materia_id:
+                  type: string
+                  nullable: true
+                  description: ID da matéria; null para desvincular.
+      responses:
+        '200':
+          description: Vínculo atualizado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  estudo_id:  { type: string }
+                  materia_id: { type: string, nullable: true }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+
+  /api/materias:
+    get:
+      tags: [Matérias]
+      summary: Lista as matérias do usuário.
+      responses:
+        '200':
+          description: Matérias do usuário.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  materias: { type: array, items: { $ref: '#/components/schemas/Materia' } }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+    post:
+      tags: [Matérias]
+      summary: Cria uma matéria.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome]
+              properties:
+                nome: { type: string }
+                cor:  { type: string, default: c-blue }
+      responses:
+        '201':
+          description: Matéria criada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  materia_id: { type: string }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+
+  /api/materias/{materia_id}:
+    parameters:
+      - name: materia_id
+        in: path
+        required: true
+        schema: { type: string }
+    delete:
+      tags: [Matérias]
+      summary: Remove uma matéria (estudos vinculados são apenas desvinculados).
+      responses:
+        '204': { description: Removida. }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+
+  /api/materias/{materia_id}/estudos:
+    parameters:
+      - name: materia_id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Matérias]
+      summary: Lista os estudos de uma matéria.
+      responses:
+        '200':
+          description: Estudos da matéria.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  estudos: { type: array, items: { $ref: '#/components/schemas/Estudo' } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
