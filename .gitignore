@@ -25,3 +25,11 @@ serviceAccountKey.json
 # Uploads temporários
 /tmp/
 *.tmp
+
+# Cache
+.cache/
+
+# Coverage
+htmlcov/
+.coverage
+coverage.xml

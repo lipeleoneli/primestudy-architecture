@@ -13,7 +13,7 @@ A arquitetura, decisões e padrões estão documentados em [`docs/`](docs/).
 
 Monolito modular (ADR-001) organizado em **Clean Architecture** (ADR-002): o
 domínio no centro, dependências apontando para dentro, infraestrutura e HTTP na
-borda. As decisões estão registradas como ADRs em [`docs/adr/`](docs/adr/) e a
+borda. As decisões estão registradas como ADRs em [`adrs/`](adrs/) e a
 API em [`docs/openapi.yaml`](docs/openapi.yaml).
 
 ```
@@ -153,7 +153,7 @@ Resumo dos endpoints (todos sob `/api`, autenticados por cookie de sessão):
 
 ## Documentação do projeto
 
-- [`docs/adr/`](docs/adr/) — Registros de Decisão Arquitetural (ADR-001 a 005).
+- [`adrs/`](adrs/) — Registros de Decisão Arquitetural (ADR-001 a 005).
 - [`docs/quality.md`](docs/quality.md) — atributos de qualidade (ISO/IEC 25010).
 - [`docs/openapi.yaml`](docs/openapi.yaml) — especificação da API REST.
 - `docs/diagrams/` — diagramas (C4, classes, sequência).
