@@ -56,7 +56,7 @@ O sistema armazena material de estudo pessoal. Um usuário não pode acessar dad
 - **Firebase Authentication:** tokens JWT com expiração gerenciados pelo Google. O backend Flask verifica o token a cada login e jamais confia em `uid` enviado pelo cliente.  
 - **Sessão Flask server-side:** o `uid` fica na sessão do servidor; o cliente recebe apenas um cookie de sessão assinado.
 
-**Métrica de verificação:** toda rota `/api/*` retorna 401 se `session['uid']` não estiver presente.
+**Métrica de verificação:** em modo de produção (real), toda rota `/api/*` retorna 401 se `session['uid']` não estiver presente. No modo demo, documentado no README, a verificação é dispensada (um `uid` fixo é usado) para permitir avaliação sem credenciais.
 
 ---
 

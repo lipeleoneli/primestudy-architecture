@@ -59,7 +59,7 @@ primestudy-architecture/
 │       ├── errors.py                # Handlers de erro HTTP padronizados
 │       └── serializers.py           # Entidade -> JSON
 │
-├── adrs/                            # Decisões arquiteturais (ADR-001 a ADR-005)
+├── adrs/                            # Decisões arquiteturais (ADR-001 a ADR-006)
 ├── diagrams/                        # Diagramas em Mermaid (C4, classes GoF, sequência)
 ├── docs/                            # openapi.yaml, quality.md, este arquivo
 ├── tests/                           # test_gerar_conteudo.py, test_interface.py (32 testes)

@@ -7,8 +7,5 @@ firebase-admin>=6.5,<7.0      # FirestoreEstudoRepo + verificação de idToken
 google-genai>=0.3              # GeminiAdapter (modelo gemini-2.5-flash)
 pdfplumber>=0.11               # PDFParser (extração de texto)
 
-# Especificação de API
-PyYAML>=6.0                    # carregar docs/openapi.yaml no endpoint /api/openapi.yaml
-
 # Testes
 pytest>=8.0

@@ -33,7 +33,7 @@ src/
   infrastructure/  adapters: Firestore, Gemini, pdfplumber (GoF Adapter) + impls de demo
   interface/       Flask: composition root, blueprints, guard de auth, erros
 tests/             testes unitários (rodam sem rede)
-adrs/              Registros de Decisão Arquitetural (ADR-001 a 005)
+adrs/              Registros de Decisão Arquitetural (ADR-001 a 006)
 diagrams/          diagramas Mermaid (C4, classes GoF, sequência)
 docs/              OpenAPI, atributos de qualidade, guia da estrutura
 ```
@@ -165,7 +165,8 @@ Resumo dos endpoints (todos sob `/api`, autenticados por cookie de sessão):
 
 ## Documentação do projeto
 
-- [`adrs/`](adrs/) — Registros de Decisão Arquitetural (ADR-001 a 005).
+- [`docs/introducao.md`](docs/introducao.md) — apresentação, objetivos e público-alvo.
+- [`adrs/`](adrs/) — Registros de Decisão Arquitetural (ADR-001 a 006).
 - [`diagrams/`](diagrams/) — diagramas Mermaid (C4, classes GoF, sequência).
 - [`docs/openapi.yaml`](docs/openapi.yaml) — especificação da API REST.
 - [`docs/quality.md`](docs/quality.md) — atributos de qualidade (ISO/IEC 25010).

@@ -57,8 +57,7 @@ class GerarConteudoUseCase:
 
     def executar(self, dados: GerarConteudoInput) -> GerarConteudoOutput:
         estudo = self._buscar_ou_falhar(dados.uid, dados.estudo_id)
-
-        tipo_ia, tipo_salvar, texto_base = self._resolver_tipo(dados.tipo, estudo.conteudo)
+        tipo_ia, tipo_salvar, texto_base = self._resolver_texto_base(dados.tipo, estudo)
         historico = estudo.conteudo_do_tipo(tipo_salvar) if dados.acao == "mais" else ""
 
         strategy = self._factory.criar(tipo_ia)
@@ -78,45 +77,19 @@ class GerarConteudoUseCase:
         return estudo
 
     @staticmethod
-    def _resolver_tipo(tipo: str, conteudo: dict) -> tuple[str, str, str]:
+    def _resolver_texto_base(tipo: str, estudo) -> tuple[str, str, str]:
         """
         Resolve alias e devolve (tipo_ia, tipo_salvar, texto_base).
 
         'questoes_resumo' gera questões baseadas no resumo já salvo,
-        não no texto bruto do PDF — por isso precisa de tratamento especial.
+        não no texto bruto do PDF — por isso tem tratamento especial.
         """
-        if tipo == "questoes_resumo":
-            resumo = conteudo.get("resumo", "")
-            if not resumo:
-                raise ValueError("Gere um Resumo antes de criar questões do resumo.")
-            return "questoes", "questoes", resumo
-
-        from src.domain.entities.estudo import Estudo  # evita import circular
-        # texto_base será preenchido pelo chamador via estudo.texto
-        return tipo, tipo, ""   # sinaliza que usará estudo.texto
-
-    def _resolver_texto_base(self, tipo: str, estudo) -> tuple[str, str, str]:
-        """Versão integrada que retorna texto_base correto do estudo."""
         if tipo == "questoes_resumo":
             resumo = estudo.conteudo_do_tipo("resumo")
             if not resumo:
                 raise ValueError("Gere um Resumo antes de criar questões do resumo.")
             return "questoes", "questoes", resumo
         return tipo, tipo, estudo.texto
-
-    def executar(self, dados: GerarConteudoInput) -> GerarConteudoOutput:  # noqa: F811
-        """Método principal (sobrescreve o anterior para usar _resolver_texto_base)."""
-        estudo = self._buscar_ou_falhar(dados.uid, dados.estudo_id)
-        tipo_ia, tipo_salvar, texto_base = self._resolver_texto_base(dados.tipo, estudo)
-        historico = estudo.conteudo_do_tipo(tipo_salvar) if dados.acao == "mais" else ""
-
-        strategy = self._factory.criar(tipo_ia)
-        resultado = strategy.gerar(texto_base, historico)
-
-        conteudo_final = self._mesclar(resultado, historico, tipo_salvar)
-        self._repositorio.atualizar_conteudo_estudo(dados.uid, dados.estudo_id, tipo_salvar, conteudo_final)
-
-        return GerarConteudoOutput(conteudo=conteudo_final, tipo_render=tipo_salvar)
 
     @staticmethod
     def _mesclar(novo: str, historico: str, tipo: str) -> str:
