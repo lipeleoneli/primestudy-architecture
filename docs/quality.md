@@ -1,6 +1,6 @@
 # Atributos de Qualidade — PrimeStudy
 **Norma de referência:** ISO/IEC 25010:2023  
-**Autor:** Rafael Roveri Pires
+**Autor:** Equipe PrimeStudy
 
 ---
 
