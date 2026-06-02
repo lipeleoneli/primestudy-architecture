@@ -5,7 +5,17 @@ tópicos, flashcards, quiz e mapa mental** — e organiza o material por matéri
 com checklist de tópicos por estudo.
 
 Projeto da disciplina **12452 – Padrões e Arquitetura de Software** (PUC-Campinas).
-A arquitetura, decisões e padrões estão documentados em [`docs/`](docs/).
+A arquitetura, decisões e padrões estão documentados em [`docs/`](docs/) e [`adrs/`](adrs/).
+
+---
+
+## Tecnologias utilizadas
+
+- **Python 3.11+** + **Flask** — API REST (JSON)
+- **Google Firestore** (`firebase-admin`) — banco NoSQL gerenciado (ADR-003)
+- **Google Gemini 2.5 Flash** (`google-genai`) — geração de conteúdo (ADR-004)
+- **pdfplumber** — extração de texto de PDFs
+- **pytest** — testes automatizados
 
 ---
 
@@ -23,7 +33,9 @@ src/
   infrastructure/  adapters: Firestore, Gemini, pdfplumber (GoF Adapter) + impls de demo
   interface/       Flask: composition root, blueprints, guard de auth, erros
 tests/             testes unitários (rodam sem rede)
-docs/              ADRs, OpenAPI, atributos de qualidade, diagramas
+adrs/              Registros de Decisão Arquitetural (ADR-001 a 005)
+diagrams/          diagramas Mermaid (C4, classes GoF, sequência)
+docs/              OpenAPI, atributos de qualidade, guia da estrutura
 ```
 
 ---
@@ -154,9 +166,10 @@ Resumo dos endpoints (todos sob `/api`, autenticados por cookie de sessão):
 ## Documentação do projeto
 
 - [`adrs/`](adrs/) — Registros de Decisão Arquitetural (ADR-001 a 005).
-- [`docs/quality.md`](docs/quality.md) — atributos de qualidade (ISO/IEC 25010).
+- [`diagrams/`](diagrams/) — diagramas Mermaid (C4, classes GoF, sequência).
 - [`docs/openapi.yaml`](docs/openapi.yaml) — especificação da API REST.
-- `docs/diagrams/` — diagramas (C4, classes, sequência).
+- [`docs/quality.md`](docs/quality.md) — atributos de qualidade (ISO/IEC 25010).
+- [`docs/estrutura-do-projeto.md`](docs/estrutura-do-projeto.md) — guia das camadas.
 
 ### Padrões aplicados
 - **GoF Strategy** — uma classe por tipo de conteúdo (`application/strategies/`).
