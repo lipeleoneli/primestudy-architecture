@@ -14,6 +14,7 @@ env/
 # Variáveis de ambiente e segredos (NUNCA versionar)
 .env
 .env.*
+!.env.example
 *-service-account*.json
 firebase-credentials*.json
 serviceAccountKey.json
