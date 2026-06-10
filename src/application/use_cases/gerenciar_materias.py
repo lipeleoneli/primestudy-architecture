@@ -13,6 +13,7 @@ from typing import Optional
 
 from src.domain.entities.materia import Materia
 from src.domain.entities.estudo import Estudo
+from src.domain.exceptions import RecursoNaoEncontradoError
 from src.domain.ports.estudo_repository import IEstudoRepository
 
 
@@ -73,4 +74,4 @@ class GerenciarMateriasUseCase:
 
     def _garantir_materia_existe(self, uid: str, materia_id: str) -> None:
         if self._repositorio.buscar_materia(uid, materia_id) is None:
-            raise ValueError(f"Matéria '{materia_id}' não encontrada.")
+            raise RecursoNaoEncontradoError(f"Matéria '{materia_id}' não encontrada.")

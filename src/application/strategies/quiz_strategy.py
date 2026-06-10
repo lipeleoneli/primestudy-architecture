@@ -1,8 +1,10 @@
 """Strategy concreta: geração de Quiz (questões de múltipla escolha)."""
 import json
+from dataclasses import asdict
+from typing import Optional
 
 from src.application.strategies.conteudo_strategy import ConteudoStrategy
-from src.domain.ports.gerador_ia import IGeradorIA
+from src.domain.entities.questao import Questao
 
 
 _INSTRUCAO_SISTEMA = (
@@ -31,12 +33,11 @@ class QuizStrategy(ConteudoStrategy):
     """
     Gera questões de múltipla escolha em JSON estruturado.
 
-    Retorna uma string JSON com a lista de questões validadas,
-    pronta para ser parseada pelo frontend do quiz interativo.
+    A resposta bruta do modelo é validada contra a entidade de domínio
+    Questao (invariantes: pergunta não vazia, exatamente 4 alternativas,
+    índice da correta entre 0 e 3). Questões que violam a invariante são
+    descartadas — só JSON garantidamente válido chega ao frontend.
     """
-
-    def __init__(self, gerador: IGeradorIA) -> None:
-        super().__init__(gerador)
 
     def gerar(self, texto: str, historico: str = "") -> str:
         prompt = (
@@ -55,31 +56,30 @@ class QuizStrategy(ConteudoStrategy):
         texto_limpo = resultado_bruto.replace("```json", "").replace("```", "").strip()
         try:
             dados = json.loads(texto_limpo)
-            questoes_validas = [
-                self._normalizar_questao(q)
-                for q in dados
-                if self._questao_valida(q)
-            ]
+            questoes = [self._montar_questao(q) for q in dados]
+            questoes_validas = [asdict(q) for q in questoes if q is not None]
             if not questoes_validas:
                 raise ValueError("Nenhuma questão válida retornada pelo modelo.")
             return json.dumps(questoes_validas, ensure_ascii=False)
-        except (json.JSONDecodeError, ValueError):
+        except (json.JSONDecodeError, TypeError, ValueError):
             return _QUESTAO_VAZIA
 
     @staticmethod
-    def _questao_valida(q: dict) -> bool:
-        alternativas = q.get("alternativas") or []
-        return bool(q.get("pergunta")) and len(alternativas) >= 2
-
-    @staticmethod
-    def _normalizar_questao(q: dict) -> dict:
-        alternativas = q.get("alternativas", [])
-        correta = q.get("correta", 0)
-        if not isinstance(correta, int) or not (0 <= correta < len(alternativas)):
+    def _montar_questao(bruto: dict) -> Optional[Questao]:
+        """Converte o dict do modelo na entidade Questao; None se inválida."""
+        if not isinstance(bruto, dict):
+            return None
+        alternativas = [str(a) for a in (bruto.get("alternativas") or [])]
+        correta = bruto.get("correta", 0)
+        if not isinstance(correta, int):
             correta = 0
-        return {
-            "pergunta":     q.get("pergunta", ""),
-            "alternativas": alternativas,
-            "correta":      correta,
-            "explicacao":   q.get("explicacao", ""),
-        }
+        try:
+            return Questao(
+                pergunta=str(bruto.get("pergunta") or ""),
+                alternativas=alternativas,
+                correta=correta,
+                explicacao=str(bruto.get("explicacao") or ""),
+            )
+        except ValueError:
+            # invariante de domínio violada (ex.: nº de alternativas != 4)
+            return None
