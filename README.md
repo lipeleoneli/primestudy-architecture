@@ -189,13 +189,8 @@ Detalhes, motivação e verificação de cada padrão em [`docs/padroes-gof.md`]
 
 ## Equipe
 
-| Integrante | RA |
-|---|---|
-| _Nome do integrante 1_ | _RA_ |
-| _Nome do integrante 2_ | _RA_ |
-| _Nome do integrante 3_ | _RA_ |
-| _Nome do integrante 4_ | _RA_ |
-| _Nome do integrante 5_ | _RA_ |
-| _Nome do integrante 6_ | _RA_ |
-
-> Preencha com os nomes e RAs dos 6 integrantes antes da entrega.
+Anderson Lucas Gondin - 24787293
+Felipe Nonato Leoneli - 24021973
+Filipe Ribeiro Simões - 24007657
+Lucas Presendo Canhete - 23025535
+Rafael Roveri Pires - 24007131
