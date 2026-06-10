@@ -1,13 +1,8 @@
 """
-Composition Root da aplicação PrimeStudy.
+Composition root da aplicação PrimeStudy.
 
-Este é o ÚNICO lugar que conhece implementações concretas. Aqui as
-dependências são escolhidas conforme o modo (demo/real) e injetadas nos
-use cases. As rotas recebem tudo pronto — demonstração direta de DIP:
-a direção de dependência aponta para dentro, e a montagem fica na borda.
-
-create_app() é uma application factory (padrão recomendado pelo Flask):
-permite criar instâncias isoladas para testes e produção.
+Único lugar que conhece implementações concretas. As dependências são
+montadas conforme o modo (demo/real) e injetadas nos use cases.
 """
 from dataclasses import dataclass
 from typing import Optional

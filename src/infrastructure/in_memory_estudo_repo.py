@@ -1,15 +1,10 @@
 """
-Adapter de persistência em memória: InMemoryEstudoRepo.
+Implementação em memória de IEstudoRepository.
 
-Implementação de IEstudoRepository que guarda tudo em dicionários.
-Usada no modo DEMO — permite subir e explorar a API sem Firestore.
-
-Demonstra o valor do port IEstudoRepository (DIP): trocar Firestore por
-memória não exige nenhuma mudança nos use cases. É o mesmo contrato.
-
-Padrão Repository (Fowler/PoEAA): abstrai a coleção de agregados como se
-fosse uma coleção em memória — aqui literalmente é.
+Usada no modo demo — permite subir a API sem Firestore.
+Dados são perdidos ao reiniciar o servidor.
 """
+from datetime import datetime, timezone
 from typing import Optional
 
 from src.domain.entities.estudo import Estudo, ItemChecklist
@@ -43,7 +38,8 @@ class InMemoryEstudoRepo(IEstudoRepository):
 
     def listar_estudos_recentes(self, uid: str, limite: int = 50) -> list[Estudo]:
         estudos = list(self._estudos.get(uid, {}).values())
-        estudos.sort(key=lambda e: e.criado_em or 0, reverse=True)
+        _EPOCH = datetime.min.replace(tzinfo=timezone.utc)
+        estudos.sort(key=lambda e: e.criado_em or _EPOCH, reverse=True)
         return estudos[:limite]
 
     def atualizar_conteudo_estudo(self, uid: str, estudo_id: str, tipo: str, valor: str) -> None:

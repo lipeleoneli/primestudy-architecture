@@ -1,18 +1,7 @@
 """
-Port (interface): IEstudoRepository.
+Interface de persistência para Estudos e Materias.
 
-Define o contrato que qualquer implementação de persistência de estudos
-deve satisfazer. O domínio conhece apenas esta interface — jamais o Firestore.
-
-SOLID — DIP: casos de uso dependem desta abstração, não da implementação concreta.
-
-Nota sobre ISP: este é o contrato do *Repository* (padrão de Fowler) para a
-fronteira de persistência. Por agregar dois agregados próximos (Estudo e
-Materia), é uma interface ampla — cada caso de uso usa apenas o subconjunto de
-métodos que precisa. A segregação de interface (ISP) fica evidente nos ports de
-serviço, deliberadamente mínimos: IGeradorIA e IPDFParser têm um único método
-cada. Caso a parte de Materia cresça, o caminho natural é extrair um
-IMateriaRepository.
+O domínio conhece apenas este contrato — nunca o Firestore diretamente.
 """
 from abc import ABC, abstractmethod
 from typing import Optional

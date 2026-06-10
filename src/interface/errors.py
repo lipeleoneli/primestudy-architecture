@@ -9,9 +9,16 @@ Convenção de erro: { "erro": <mensagem>, "codigo": <slug> }.
 from flask import Flask, jsonify
 from werkzeug.exceptions import HTTPException
 
+from src.domain.ports.auth_port import ErroAutenticacao
+
 
 def registrar_tratadores_de_erro(app: Flask) -> None:
     """Registra os handlers globais de erro na aplicação."""
+
+    @app.errorhandler(ErroAutenticacao)
+    def _erro_de_autenticacao(exc: ErroAutenticacao):
+        # token inválido ou expirado → 401
+        return jsonify({"erro": str(exc), "codigo": "NAO_AUTENTICADO"}), 401
 
     @app.errorhandler(ValueError)
     def _erro_de_validacao(exc: ValueError):

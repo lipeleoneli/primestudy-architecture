@@ -1,19 +1,8 @@
 """
-Padrão GoF — Strategy (Comportamento).
+Interface base para geração de conteúdo via IA.
 
-PROBLEMA RESOLVIDO: O gemini_services.py original tinha uma função
-gerar_conteudo() com 120+ linhas de if/elif encadeados para cada tipo
-de conteúdo (resumo, quiz, flashcard…). Adicionar um novo tipo exigia
-editar essa função — violando OCP.
-
-SOLUÇÃO: Cada tipo de conteúdo vira uma classe concreta de Strategy.
-Adicionar 'mapas de calor' no futuro = criar MapaCalorStrategy, sem
-tocar em nenhuma classe existente.
-
-SOLID — OCP: aberto para extensão, fechado para modificação.
-SOLID — SRP: cada Strategy é responsável por um único tipo de geração.
-SOLID — LSP: qualquer Strategy pode ser substituída por outra sem
-             alterar o comportamento do GerarConteudoUseCase.
+Cada tipo de conteúdo (resumo, quiz, flashcard…) é uma subclasse que
+monta o prompt adequado e delega a chamada ao IGeradorIA injetado.
 """
 from abc import ABC, abstractmethod
 
@@ -29,7 +18,6 @@ class ConteudoStrategy(ABC):
     """
 
     def __init__(self, gerador: IGeradorIA) -> None:
-        # DIP: recebe a abstração, não a implementação concreta (Gemini, mock…)
         self._gerador = gerador
 
     @abstractmethod

@@ -1,13 +1,8 @@
 """
 Caso de uso: ProcessarPDF.
 
-SOLID — SRP: esta classe faz uma única coisa — receber o bytes de um PDF,
-             extrair o texto e salvar o novo estudo no repositório.
-SOLID — DIP: depende de IPDFParser e IEstudoRepository (abstrações),
-             não de pdfplumber nem Firestore.
-
-Clean Code: nome do método diz o que ele faz; sem comentário desnecessário;
-            cada passo do fluxo cabe em uma linha descritiva.
+Recebe os bytes de um PDF, extrai o texto via IPDFParser e persiste
+o novo estudo no repositório.
 """
 from dataclasses import dataclass
 from typing import Optional
@@ -34,12 +29,7 @@ class ProcessarPDFOutput:
 
 
 class ProcessarPDFUseCase:
-    """
-    Processa o upload de um PDF: extrai o texto e persiste o estudo.
-
-    Não conhece Flask, Firestore nem pdfplumber —
-    apenas as interfaces que eles implementam.
-    """
+    """Processa o upload de um PDF: extrai o texto e persiste o estudo."""
 
     def __init__(
         self,
@@ -61,13 +51,9 @@ class ProcessarPDFUseCase:
     # ── helpers privados ─────────────────────────────────────────────────────
 
     def _extrair_texto_ou_falhar(self, conteudo_bytes: bytes) -> str:
-        texto = self._parser.extrair_texto(conteudo_bytes)
-        if not texto.strip():
-            raise ValueError(
-                "Este PDF contém imagens escaneadas e não possui texto legível. "
-                "Por favor, envie um PDF com texto selecionável."
-            )
-        return texto
+        # ValueError (PDF sem texto) e RuntimeError (falha ao abrir)
+        # já são levantados pelo parser — não duplicar a checagem aqui.
+        return self._parser.extrair_texto(conteudo_bytes)
 
     @staticmethod
     def _montar_estudo(dados: ProcessarPDFInput, texto: str) -> Estudo:

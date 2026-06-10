@@ -1,17 +1,8 @@
 """
-Padrão GoF — Factory Method (Criação).
+Factory de ConteudoStrategy.
 
-PROBLEMA RESOLVIDO: sem a factory, o GerarConteudoUseCase precisaria
-conhecer todas as classes concretas de Strategy e instanciá-las
-diretamente — acoplamento alto e violação de OCP.
-
-SOLUÇÃO: A ConteudoFactory centraliza a criação de Strategies. Adicionar
-um novo tipo de conteúdo exige apenas registrar a nova classe aqui,
-sem tocar nos casos de uso.
-
-SOLID — OCP: novos tipos de conteúdo = novo registro no dicionário,
-             zero modificação em GerarConteudoUseCase.
-SOLID — DIP: o caso de uso recebe a factory, não instancia diretamente.
+Mapeia tipos de conteúdo às classes concretas de Strategy.
+Adicionar um tipo novo = registrar no _REGISTRO, sem alterar os casos de uso.
 """
 from src.application.strategies.conteudo_strategy import ConteudoStrategy
 from src.application.strategies.resumo_strategy import ResumoStrategy, ResumoMenorStrategy
@@ -32,8 +23,7 @@ class ConteudoFactory:
         resultado = strategy.gerar(texto)
     """
 
-    # Registro central: tipo → classe concreta da Strategy
-    # Para adicionar um novo tipo: basta incluir uma linha aqui.
+    # tipo → classe concreta da Strategy
     _REGISTRO: dict[str, type[ConteudoStrategy]] = {
         "resumo":             ResumoStrategy,
         "resumo_menor":       ResumoMenorStrategy,
@@ -46,7 +36,6 @@ class ConteudoFactory:
     }
 
     def __init__(self, gerador: IGeradorIA) -> None:
-        # DIP: recebe a abstração do gerador, não o Gemini diretamente
         self._gerador = gerador
 
     def criar(self, tipo: str) -> ConteudoStrategy:

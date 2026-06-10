@@ -1,15 +1,8 @@
 """
 Caso de uso: GerarConteudo.
 
-SOLID — SRP: responsável apenas por orquestrar a geração e persistência
-             de um tipo de conteúdo para um estudo existente.
-SOLID — OCP: novos tipos de conteúdo são suportados sem alterar este código —
-             basta registrar a Strategy na ConteudoFactory.
-SOLID — DIP: depende de IEstudoRepository e ConteudoFactory, não de
-             implementações concretas.
-
-GoF — Strategy + Factory Method: a factory seleciona e instancia a
-Strategy correta para cada tipo, eliminando o if/elif gigante original.
+Orquestra a geração de um tipo de conteúdo para um estudo existente,
+usando a Strategy selecionada pela ConteudoFactory.
 """
 import json
 from dataclasses import dataclass

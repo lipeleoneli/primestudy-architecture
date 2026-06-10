@@ -1,15 +1,9 @@
 """
-Adapter de IA real: GeminiAdapter.
+Adapter entre a SDK google.genai e o contrato IGeradorIA.
 
-PADRÃO GoF — Adapter (Estrutural).
-PROBLEMA: a camada de aplicação fala a interface IGeradorIA.gerar(prompt)->str,
-mas a SDK do Google (google.genai) expõe outra interface
-(client.models.generate_content(...) com objetos de resposta próprios).
-SOLUÇÃO: este adapter converte a interface da SDK para o contrato IGeradorIA.
-Trocar o Gemini por OpenAI = escrever outro adapter; nada mais muda.
-
-A SDK só é importada dentro do __init__ para que o modo DEMO não precise
-da biblioteca/credencial configurada.
+A SDK expõe client.models.generate_content() com objeto de resposta próprio;
+este adapter converte isso para gerar(prompt) -> str.
+A SDK é importada dentro do __init__ para não quebrar o modo demo.
 """
 from src.domain.ports.gerador_ia import IGeradorIA
 

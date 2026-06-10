@@ -105,11 +105,19 @@ class FakeEstudoRepository(IEstudoRepository):
 
 
 class FakePDFParser(IPDFParser):
-    """Substitui o pdfplumber nos testes."""
+    """
+    Substitui o pdfplumber nos testes.
+
+    Honra o mesmo contrato do PDFParser real: levanta ValueError
+    se o texto for vazio ou apenas espaços (LSP — substituível sem
+    alterar o comportamento esperado pelo use case).
+    """
     def __init__(self, texto: str = "texto extraído do pdf"):
         self.texto = texto
 
     def extrair_texto(self, conteudo_bytes: bytes) -> str:
+        if not self.texto.strip():
+            raise ValueError("PDF sem texto selecionável.")
         return self.texto
 
 
