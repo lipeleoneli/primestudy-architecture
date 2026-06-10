@@ -166,10 +166,15 @@ Resumo dos endpoints (todos sob `/api`, autenticados por cookie de sessão):
 ## Documentação do projeto
 
 - [`docs/introducao.md`](docs/introducao.md) — apresentação, objetivos e público-alvo.
-- [`adrs/`](adrs/) — Registros de Decisão Arquitetural (ADR-001 a 006).
-- [`diagrams/`](diagrams/) — diagramas Mermaid (C4, classes GoF, sequência).
-- [`docs/openapi.yaml`](docs/openapi.yaml) — especificação da API REST.
+- [`adrs/`](adrs/) — Registros de Decisão Arquitetural (ADR-001 a 006; o ADR-004
+  documenta uma decisão revisada — Gemini 1.5 → 2.5).
+- [`diagrams/`](diagrams/) — diagramas Mermaid (C4, classes GoF, sequência);
+  renderizam direto no GitHub ou em [mermaid.live](https://mermaid.live).
+- [`docs/openapi.yaml`](docs/openapi.yaml) — especificação da API REST; abra em
+  [Swagger Editor](https://editor.swagger.io/) ou Redoc para navegar.
 - [`docs/quality.md`](docs/quality.md) — atributos de qualidade (ISO/IEC 25010).
+- [`docs/solid.md`](docs/solid.md) — os 5 princípios SOLID com trechos reais do código.
+- [`docs/padroes-gof.md`](docs/padroes-gof.md) — padrões GoF: problema, solução e verificação.
 - [`docs/estrutura-do-projeto.md`](docs/estrutura-do-projeto.md) — guia das camadas.
 
 ### Padrões aplicados
@@ -177,3 +182,20 @@ Resumo dos endpoints (todos sob `/api`, autenticados por cookie de sessão):
 - **GoF Factory Method** — `ConteudoFactory` instancia a Strategy certa.
 - **GoF Adapter** — `GeminiAdapter`, `PDFParser` adaptam libs externas aos ports.
 - **Repository (Fowler)** — `FirestoreEstudoRepo` / `InMemoryEstudoRepo`.
+
+Detalhes, motivação e verificação de cada padrão em [`docs/padroes-gof.md`](docs/padroes-gof.md).
+
+---
+
+## Equipe
+
+| Integrante | RA |
+|---|---|
+| _Nome do integrante 1_ | _RA_ |
+| _Nome do integrante 2_ | _RA_ |
+| _Nome do integrante 3_ | _RA_ |
+| _Nome do integrante 4_ | _RA_ |
+| _Nome do integrante 5_ | _RA_ |
+| _Nome do integrante 6_ | _RA_ |
+
+> Preencha com os nomes e RAs dos 6 integrantes antes da entrega.

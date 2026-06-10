@@ -19,9 +19,10 @@ primestudy-architecture/
 │   │   ├── entities/                # Entidades de domínio
 │   │   │   ├── estudo.py            # Estudo + ItemChecklist
 │   │   │   ├── materia.py           # Materia (valida nome no __post_init__)
-│   │   │   └── questao.py           # Questao (invariante: 4 alternativas)
+│   │   │   └── questao.py           # Questao (invariantes: 4 alternativas, usada pela QuizStrategy)
+│   │   ├── exceptions.py            # RecursoNaoEncontradoError (→ 404 na borda HTTP)
 │   │   └── ports/                   # Interfaces (contratos) — abstrações ABC
-│   │       ├── estudo_repository.py # IEstudoRepository
+│   │       ├── estudo_repository.py # IEstudoRepository (contrato de erro especificado — LSP)
 │   │       ├── gerador_ia.py        # IGeradorIA  — gerar(prompt) -> str
 │   │       └── pdf_parser.py        # IPDFParser  — extrair_texto(bytes) -> str
 │   │
@@ -61,8 +62,9 @@ primestudy-architecture/
 │
 ├── adrs/                            # Decisões arquiteturais (ADR-001 a ADR-006)
 ├── diagrams/                        # Diagramas em Mermaid (C4, classes GoF, sequência)
-├── docs/                            # openapi.yaml, quality.md, este arquivo
-├── tests/                           # test_gerar_conteudo.py, test_interface.py (32 testes)
+├── docs/                            # openapi.yaml, quality.md, solid.md, padroes-gof.md, este arquivo
+├── tests/                           # 77 testes: use cases, entidades, strategies,
+│                                    #   contrato do repositório e camada HTTP
 │
 ├── .gitignore
 ├── .env.example                     # Variáveis de ambiente necessárias

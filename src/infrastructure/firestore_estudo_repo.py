@@ -18,6 +18,7 @@ from typing import Optional
 
 from src.domain.entities.estudo import Estudo, ItemChecklist
 from src.domain.entities.materia import Materia
+from src.domain.exceptions import RecursoNaoEncontradoError
 from src.domain.ports.estudo_repository import IEstudoRepository
 
 
@@ -35,6 +36,15 @@ class FirestoreEstudoRepo(IEstudoRepository):
 
     def _col_materias(self, uid: str):
         return self._db.collection("usuarios").document(uid).collection("materias")
+
+    def _atualizar_estudo(self, uid: str, estudo_id: str, campos: dict) -> None:
+        """Aplica update traduzindo o NotFound do SDK para a exceção do port (LSP)."""
+        from google.api_core import exceptions as gexc  # import tardio: só no modo real
+
+        try:
+            self._col_estudos(uid).document(estudo_id).update(campos)
+        except gexc.NotFound as exc:
+            raise RecursoNaoEncontradoError(f"Estudo '{estudo_id}' não encontrado.") from exc
 
     # ── Estudos ─────────────────────────────────────────────────────────────
 
@@ -61,17 +71,17 @@ class FirestoreEstudoRepo(IEstudoRepository):
         return [self._doc_para_estudo(d.id, d.to_dict()) for d in query.stream()]
 
     def atualizar_conteudo_estudo(self, uid: str, estudo_id: str, tipo: str, valor: str) -> None:
-        self._col_estudos(uid).document(estudo_id).update({f"conteudo.{tipo}": valor})
+        self._atualizar_estudo(uid, estudo_id, {f"conteudo.{tipo}": valor})
 
     def atualizar_checklist(self, uid: str, estudo_id: str, itens: list[ItemChecklist]) -> None:
         payload = [{"texto": i.texto, "feito": i.feito} for i in itens]
-        self._col_estudos(uid).document(estudo_id).update({"checklist": payload})
+        self._atualizar_estudo(uid, estudo_id, {"checklist": payload})
 
     def atualizar_materia_do_estudo(self, uid: str, estudo_id: str, materia_id: Optional[str]) -> None:
-        self._col_estudos(uid).document(estudo_id).update({"materia_id": materia_id})
+        self._atualizar_estudo(uid, estudo_id, {"materia_id": materia_id})
 
     def renomear_estudo(self, uid: str, estudo_id: str, novo_nome: str) -> None:
-        self._col_estudos(uid).document(estudo_id).update({"nome": novo_nome})
+        self._atualizar_estudo(uid, estudo_id, {"nome": novo_nome})
 
     def deletar_estudo(self, uid: str, estudo_id: str) -> None:
         self._col_estudos(uid).document(estudo_id).delete()

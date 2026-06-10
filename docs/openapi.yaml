@@ -31,9 +31,11 @@ info:
     Todo erro retorna JSON `{ "erro": <mensagem>, "codigo": <slug> }`.
     - 400 `REQUISICAO_INVALIDA` — entrada inválida ou regra de negócio violada.
     - 401 `NAO_AUTENTICADO` — sem sessão válida.
-    - 404 — recurso inexistente.
+    - 404 `NAO_ENCONTRADO` — recurso inexistente para o usuário autenticado.
     - 502 `FALHA_DEPENDENCIA` — falha em serviço externo (IA, parser de PDF).
     - 500 `ERRO_INTERNO` — erro inesperado.
+
+    DELETE é idempotente: remover um recurso já inexistente responde 204.
 
     ## Paginação
     Listagens aceitam `limite` (1–100, padrão 50) e `offset` (>=0, padrão 0).
@@ -270,6 +272,7 @@ paths:
                   nome: { type: string }
         '400': { $ref: '#/components/responses/RequisicaoInvalida' }
         '401': { $ref: '#/components/responses/NaoAutenticado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
     delete:
       tags: [Estudos]
       summary: Remove um estudo.
@@ -313,6 +316,7 @@ paths:
                   tipo_render: { type: string }
         '400': { $ref: '#/components/responses/RequisicaoInvalida' }
         '401': { $ref: '#/components/responses/NaoAutenticado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
         '502':
           description: Falha na geração pela IA.
           content:
@@ -339,6 +343,7 @@ paths:
                   itens: { type: array, items: { $ref: '#/components/schemas/ItemChecklist' } }
         '400': { $ref: '#/components/responses/RequisicaoInvalida' }
         '401': { $ref: '#/components/responses/NaoAutenticado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
     put:
       tags: [Checklist]
       summary: Salva o estado da checklist (itens marcados).
@@ -354,6 +359,7 @@ paths:
       responses:
         '204': { description: Checklist salva. }
         '401': { $ref: '#/components/responses/NaoAutenticado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
 
   /api/estudos/{estudo_id}/materia:
     parameters:
@@ -386,6 +392,7 @@ paths:
                   estudo_id:  { type: string }
                   materia_id: { type: string, nullable: true }
         '401': { $ref: '#/components/responses/NaoAutenticado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
 
   /api/materias:
     get:
@@ -457,5 +464,5 @@ paths:
                 type: object
                 properties:
                   estudos: { type: array, items: { $ref: '#/components/schemas/Estudo' } }
-        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
         '401': { $ref: '#/components/responses/NaoAutenticado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }

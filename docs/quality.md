@@ -22,11 +22,11 @@ Os atributos de qualidade prioritários foram escolhidos a partir de três fonte
 O código do PI V entregou tudo em um `app.py` de 435 linhas. Qualquer membro do time que precisasse adicionar um novo tipo de conteúdo gerado pela IA tinha que entender toda a função `gerar_conteudo()` de 120 linhas com 8 `elif`. Esse acoplamento elevado tornava cada mudança arriscada.
 
 **Como a arquitetura atende:**  
-- **Modularidade:** cada tipo de conteúdo é uma `ConteudoStrategy` independente. Adicionar "Podcast Script" = criar `PodcastScriptStrategy`, sem alterar nenhum arquivo existente (OCP).  
+- **Modularidade:** cada tipo de conteúdo é uma `ConteudoStrategy` independente. Adicionar "Podcast Script" = criar `PodcastScriptStrategy` e registrá-la em **uma linha** da `ConteudoFactory` — nenhum use case ou Strategy existente muda (OCP).  
 - **Reusabilidade:** `IEstudoRepository` pode ser reutilizada por qualquer camada que precise de dados de estudos, sem duplicar lógica de acesso ao Firestore.  
 - **Modificabilidade:** trocar o Gemini por outro LLM exige implementar `IGeradorIA` em um novo adapter — os use cases e strategies não mudam.
 
-**Métrica de verificação:** número de arquivos alterados para adicionar um novo tipo de conteúdo. Meta: **1 arquivo** (a nova Strategy + registro na Factory).
+**Métrica de verificação:** esforço para adicionar um novo tipo de conteúdo. Meta: **1 arquivo novo** (a Strategy) **+ 1 linha de registro** na `ConteudoFactory` — zero modificação em use cases e rotas.
 
 ---
 
@@ -56,7 +56,7 @@ O sistema armazena material de estudo pessoal. Um usuário não pode acessar dad
 - **Firebase Authentication:** tokens JWT com expiração gerenciados pelo Google. O backend Flask verifica o token a cada login e jamais confia em `uid` enviado pelo cliente.  
 - **Sessão Flask server-side:** o `uid` fica na sessão do servidor; o cliente recebe apenas um cookie de sessão assinado.
 
-**Métrica de verificação:** em modo de produção (real), toda rota `/api/*` retorna 401 se `session['uid']` não estiver presente. No modo demo, documentado no README, a verificação é dispensada (um `uid` fixo é usado) para permitir avaliação sem credenciais.
+**Métrica de verificação:** em modo de produção (real), toda rota `/api/*` retorna 401 se `session['uid']` não estiver presente — comprovado por teste automatizado (`test_modo_real_sem_sessao_retorna_401` em `tests/test_interface.py`). No modo demo, documentado no README, a verificação é dispensada (um `uid` fixo é usado) para permitir avaliação sem credenciais. O isolamento por usuário também é testado (`test_dados_sao_isolados_por_usuario` em `tests/test_in_memory_repo.py`).
 
 ---
 
@@ -81,9 +81,11 @@ Chamadas à API do Gemini levam entre 3 e 15 segundos. Uma arquitetura que faz c
 O Gemini pode retornar respostas malformadas ou falhar. O sistema precisa degradar graciosamente — não travar a interface do usuário.
 
 **Como a arquitetura atende:**  
-- `QuizStrategy._validar_e_limpar()` trata `JSONDecodeError` e retorna uma questão de erro válida em vez de propagar exceção.  
-- `GerarConteudoUseCase` lança exceções tipadas (`ValueError`, `RuntimeError`) que as rotas Flask capturam e convertem em respostas JSON com código de erro adequado.  
+- `QuizStrategy._validar_e_limpar()` valida a resposta do modelo contra a entidade de domínio `Questao` e trata `JSONDecodeError`, retornando uma questão de erro válida em vez de propagar exceção.  
+- As camadas internas lançam exceções tipadas (`RecursoNaoEncontradoError` → 404, `ValueError` → 400, `RuntimeError` → 502) que os handlers centrais da interface (`src/interface/errors.py`) convertem em respostas JSON padronizadas.  
 - Firebase Firestore tem SLA de 99,99% — a disponibilidade do banco não é responsabilidade do time.
+
+**Métrica de verificação:** nenhuma resposta malformada da IA propaga exceção — comprovado por `tests/test_quiz_strategy.py` (JSON inválido, lista vazia, questão sem 4 alternativas degradam para conteúdo de erro válido).
 
 ---
 
