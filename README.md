@@ -79,7 +79,10 @@ flask --app src.interface.app:create_app run
 python -c "from src.interface.app import create_app; create_app().run(debug=True)"
 ```
 
-Servidor em `http://localhost:5000`. Teste:
+Servidor em `http://localhost:5000`. **Abra essa URL no navegador**: uma UI
+mínima de demonstração permite criar matérias, enviar PDFs, gerar conteúdo
+(resumo, quiz, flashcards, mapa) e usar a checklist — tudo consumindo a API
+REST documentada abaixo. Ou teste por linha de comando:
 
 ```bash
 curl http://localhost:5000/api/health

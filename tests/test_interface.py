@@ -41,6 +41,19 @@ def estudo_id(app):
 
 # ── Saúde e versionamento ─────────────────────────────────────────────────────
 
+def test_raiz_serve_a_ui_de_demonstracao(client):
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert "text/html" in resp.content_type
+    assert "PrimeStudy" in resp.get_data(as_text=True)
+
+def test_api_retorna_indice_json(client):
+    resp = client.get("/api")
+    assert resp.status_code == 200
+    corpo = resp.get_json()
+    assert corpo["nome"] == "PrimeStudy API"
+    assert corpo["saude"] == "/api/health"
+
 def test_health_reporta_modo_demo(client):
     resp = client.get("/api/health")
     assert resp.status_code == 200

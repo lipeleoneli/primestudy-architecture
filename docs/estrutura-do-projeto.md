@@ -58,12 +58,13 @@ primestudy-architecture/
 │       ├── materia_routes.py        # /api/materias/...
 │       ├── auth_guard.py            # @requer_login (sessão; bypass no demo)
 │       ├── errors.py                # Handlers de erro HTTP padronizados
-│       └── serializers.py           # Entidade -> JSON
+│       ├── serializers.py           # Entidade -> JSON
+│       └── static/index.html        # UI mínima de demonstração (consome a API)
 │
 ├── adrs/                            # Decisões arquiteturais (ADR-001 a ADR-006)
 ├── diagrams/                        # Diagramas em Mermaid (C4, classes GoF, sequência)
 ├── docs/                            # openapi.yaml, quality.md, solid.md, padroes-gof.md, este arquivo
-├── tests/                           # 77 testes: use cases, entidades, strategies,
+├── tests/                           # 79 testes: use cases, entidades, strategies,
 │                                    #   contrato do repositório e camada HTTP
 │
 ├── .gitignore

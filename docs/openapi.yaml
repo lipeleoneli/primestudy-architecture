@@ -132,6 +132,26 @@ security:
   - sessaoCookie: []
 
 paths:
+  /api:
+    get:
+      tags: [Autenticação]
+      summary: Índice navegável da API.
+      security: []
+      responses:
+        '200':
+          description: Mapa dos recursos disponíveis.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  nome:          { type: string, example: PrimeStudy API }
+                  modo:          { type: string, enum: [demo, real] }
+                  versao:        { type: string, example: v1 }
+                  saude:         { type: string, example: /api/health }
+                  documentacao:  { type: string }
+                  recursos:      { type: object, additionalProperties: { type: string } }
+
   /api/health:
     get:
       tags: [Autenticação]

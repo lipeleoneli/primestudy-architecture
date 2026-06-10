@@ -94,6 +94,28 @@ def create_app(config: Optional[AppConfig] = None) -> Flask:
 
     registrar_tratadores_de_erro(app)
 
+    @app.get("/")
+    def pagina_inicial():
+        # UI mínima de demonstração (estática): consome a própria API REST.
+        # Não participa do contrato OpenAPI — a API continua sendo a interface oficial.
+        return app.send_static_file("index.html")
+
+    @app.get("/api")
+    def indice():
+        # índice navegável da API em JSON
+        return {
+            "nome": "PrimeStudy API",
+            "modo": config.modo,
+            "versao": "v1",
+            "saude": "/api/health",
+            "documentacao": "docs/openapi.yaml — abra em https://editor.swagger.io/",
+            "recursos": {
+                "sessao": "POST/DELETE /api/sessao",
+                "estudos": "GET/POST /api/estudos",
+                "materias": "GET/POST /api/materias",
+            },
+        }
+
     @app.get("/api/health")
     def health():
         return {"status": "ok", "modo": config.modo}
