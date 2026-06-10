@@ -9,7 +9,7 @@
 Os atributos de qualidade prioritários foram escolhidos a partir de três fontes:
 1. **Contexto do sistema:** plataforma web de estudo individual, com chamadas a APIs externas (Gemini, Firebase) de alta latência.
 2. **Perfil dos usuários:** estudantes universitários que usam o sistema durante sessões de estudo, exigindo respostas rápidas e dados confiáveis.
-3. **Restrições do time:** equipe pequena (6 pessoas), sem infraestrutura dedicada, prazo semestral — manutenibilidade é crítica.
+3. **Restrições do time:** equipe pequena (5 pessoas), sem infraestrutura dedicada, prazo semestral — manutenibilidade é crítica.
 
 ---
 
