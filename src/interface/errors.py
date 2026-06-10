@@ -9,9 +9,16 @@ Convenção de erro: { "erro": <mensagem>, "codigo": <slug> }.
 from flask import Flask, jsonify
 from werkzeug.exceptions import HTTPException
 
+from src.domain.exceptions import RecursoNaoEncontradoError
+
 
 def registrar_tratadores_de_erro(app: Flask) -> None:
     """Registra os handlers globais de erro na aplicação."""
+
+    @app.errorhandler(RecursoNaoEncontradoError)
+    def _recurso_nao_encontrado(exc: RecursoNaoEncontradoError):
+        # recurso inexistente para este usuário → 404
+        return jsonify({"erro": str(exc), "codigo": "NAO_ENCONTRADO"}), 404
 
     @app.errorhandler(ValueError)
     def _erro_de_validacao(exc: ValueError):
