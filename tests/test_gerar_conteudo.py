@@ -14,6 +14,7 @@ import pytest
 
 from src.domain.entities.estudo import Estudo
 from src.domain.entities.materia import Materia
+from src.domain.exceptions import RecursoNaoEncontradoError
 from src.domain.ports.gerador_ia import IGeradorIA
 from src.domain.ports.estudo_repository import IEstudoRepository
 from src.domain.ports.pdf_parser import IPDFParser
@@ -66,21 +67,23 @@ class FakeEstudoRepository(IEstudoRepository):
     def listar_estudos_recentes(self, uid: str, limite: int = 50):
         return list(self._estudos.values())[:limite]
 
+    def _exigir(self, estudo_id: str) -> Estudo:
+        # contrato do port (LSP): atualização de estudo inexistente falha
+        if estudo_id not in self._estudos:
+            raise RecursoNaoEncontradoError(f"Estudo '{estudo_id}' não encontrado.")
+        return self._estudos[estudo_id]
+
     def atualizar_conteudo_estudo(self, uid: str, estudo_id: str, tipo: str, valor: str):
-        if estudo_id in self._estudos:
-            self._estudos[estudo_id].conteudo[tipo] = valor
+        self._exigir(estudo_id).conteudo[tipo] = valor
 
     def atualizar_checklist(self, uid: str, estudo_id: str, itens):
-        if estudo_id in self._estudos:
-            self._estudos[estudo_id].checklist = itens
+        self._exigir(estudo_id).checklist = itens
 
     def atualizar_materia_do_estudo(self, uid: str, estudo_id: str, materia_id):
-        if estudo_id in self._estudos:
-            self._estudos[estudo_id].materia_id = materia_id
+        self._exigir(estudo_id).materia_id = materia_id
 
     def renomear_estudo(self, uid: str, estudo_id: str, novo_nome: str):
-        if estudo_id in self._estudos:
-            self._estudos[estudo_id].nome = novo_nome
+        self._exigir(estudo_id).nome = novo_nome
 
     def deletar_estudo(self, uid: str, estudo_id: str):
         self._estudos.pop(estudo_id, None)
@@ -207,7 +210,7 @@ class TestGerarConteudoUseCase:
         use_case = GerarConteudoUseCase(repositorio, factory)
         dados = GerarConteudoInput(uid=uid, estudo_id="id-que-nao-existe", tipo="resumo")
 
-        with pytest.raises(ValueError, match="não encontrado"):
+        with pytest.raises(RecursoNaoEncontradoError, match="não encontrado"):
             use_case.executar(dados)
 
     def test_questoes_resumo_usa_resumo_como_base(self, repositorio, factory, gerador, uid, estudo_salvo):

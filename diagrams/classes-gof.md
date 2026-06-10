@@ -16,7 +16,9 @@ classDiagram
     class TopicosStrategy
     class ChecklistTopicosStrategy
     class FlashcardStrategy
-    class QuizStrategy
+    class QuizStrategy {
+        -_validar_e_limpar(resultado_bruto: str) str
+    }
     class MapaMentalStrategy
     ConteudoStrategy <|-- ResumoStrategy
     ConteudoStrategy <|-- ResumoMenorStrategy
@@ -80,4 +82,13 @@ classDiagram
     GerarConteudoUseCase ..> ConteudoFactory
     GerarConteudoUseCase ..> IEstudoRepository
     ConteudoStrategy ..> IGeradorIA : usa
+
+    %% ───────── ENTIDADE DE DOMÍNIO valida o quiz ─────────
+    class Questao {
+        +pergunta: str
+        +alternativas: list~str~ (exatamente 4)
+        +correta: int (0..3)
+        +explicacao: str
+    }
+    QuizStrategy ..> Questao : valida invariantes
 ```

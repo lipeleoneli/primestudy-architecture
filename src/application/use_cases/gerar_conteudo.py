@@ -8,6 +8,7 @@ import json
 from dataclasses import dataclass
 
 from src.application.factories.conteudo_factory import ConteudoFactory
+from src.domain.exceptions import RecursoNaoEncontradoError
 from src.domain.ports.estudo_repository import IEstudoRepository
 
 
@@ -66,7 +67,7 @@ class GerarConteudoUseCase:
     def _buscar_ou_falhar(self, uid: str, estudo_id: str):
         estudo = self._repositorio.buscar_estudo(uid, estudo_id)
         if estudo is None:
-            raise ValueError(f"Estudo '{estudo_id}' não encontrado.")
+            raise RecursoNaoEncontradoError(f"Estudo '{estudo_id}' não encontrado.")
         return estudo
 
     @staticmethod

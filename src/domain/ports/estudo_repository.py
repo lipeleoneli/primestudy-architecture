@@ -29,19 +29,39 @@ class IEstudoRepository(ABC):
 
     @abstractmethod
     def atualizar_conteudo_estudo(self, uid: str, estudo_id: str, tipo: str, valor: str) -> None:
-        """Persiste o conteúdo gerado (resumo, quiz etc.) em um estudo existente."""
+        """
+        Persiste o conteúdo gerado (resumo, quiz etc.) em um estudo existente.
+
+        Raises:
+            RecursoNaoEncontradoError: Se o estudo não existir.
+        """
 
     @abstractmethod
     def atualizar_checklist(self, uid: str, estudo_id: str, itens: list[ItemChecklist]) -> None:
-        """Persiste o estado atualizado da checklist de um estudo."""
+        """
+        Persiste o estado atualizado da checklist de um estudo.
+
+        Raises:
+            RecursoNaoEncontradoError: Se o estudo não existir.
+        """
 
     @abstractmethod
     def atualizar_materia_do_estudo(self, uid: str, estudo_id: str, materia_id: Optional[str]) -> None:
-        """Vincula ou desvincula um estudo de uma matéria (None = desvincular)."""
+        """
+        Vincula ou desvincula um estudo de uma matéria (None = desvincular).
+
+        Raises:
+            RecursoNaoEncontradoError: Se o estudo não existir.
+        """
 
     @abstractmethod
     def renomear_estudo(self, uid: str, estudo_id: str, novo_nome: str) -> None:
-        """Atualiza o nome de um estudo."""
+        """
+        Atualiza o nome de um estudo.
+
+        Raises:
+            RecursoNaoEncontradoError: Se o estudo não existir.
+        """
 
     @abstractmethod
     def deletar_estudo(self, uid: str, estudo_id: str) -> None:

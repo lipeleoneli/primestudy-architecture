@@ -14,11 +14,12 @@ PUT    /api/estudos/<id>/materia     — vincula/desvincula de uma matéria.
 Leituras/edições triviais usam o port IEstudoRepository direto (dependência
 para dentro, permitida). Operações com regra passam pelos use cases.
 """
-from flask import Blueprint, abort, current_app, g, jsonify, request
+from flask import Blueprint, current_app, g, jsonify, request
 
 from src.application.use_cases.gerar_conteudo import GerarConteudoInput
 from src.application.use_cases.gerenciar_checklist import SalvarChecklistInput
 from src.application.use_cases.gerenciar_materias import VincularEstudoInput
+from src.domain.exceptions import RecursoNaoEncontradoError
 from src.interface.auth_guard import requer_login
 from src.interface.serializers import (
     estudo_para_json,
@@ -72,7 +73,7 @@ def listar_estudos():
 def obter_estudo(estudo_id: str):
     estudo = _deps().repositorio.buscar_estudo(g.uid, estudo_id)
     if estudo is None:
-        abort(404, description=f"Estudo '{estudo_id}' não encontrado.")
+        raise RecursoNaoEncontradoError(f"Estudo '{estudo_id}' não encontrado.")
     return jsonify(estudo_para_json(estudo, incluir_texto=True))
 
 

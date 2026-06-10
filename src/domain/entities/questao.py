@@ -20,6 +20,8 @@ class Questao:
     explicacao: str
 
     def __post_init__(self) -> None:
+        if not self.pergunta or not self.pergunta.strip():
+            raise ValueError("A pergunta não pode ser vazia.")
         if len(self.alternativas) != 4:
             raise ValueError("Uma questão deve ter exatamente 4 alternativas.")
         if not (0 <= self.correta <= 3):

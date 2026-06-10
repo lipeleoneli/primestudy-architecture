@@ -25,7 +25,7 @@ def criar_sessao():
     if not id_token:
         raise ValueError("Campo 'idToken' é obrigatório.")
 
-    uid = deps.firebase_auth.verificar_id_token(id_token)  # ValueError → 401? não: 400
+    uid = deps.firebase_auth.verificar_id_token(id_token)
     session["uid"] = uid
     return jsonify({"uid": uid, "modo": "real"}), 200
 

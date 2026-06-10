@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrimeStudy</title>
+<style>
+  :root {
+    --bg: #f4f6fb; --card: #ffffff; --texto: #1d2433; --suave: #6b7280;
+    --primaria: #4f46e5; --primaria-escura: #4338ca; --borda: #e5e7eb;
+    --ok: #16a34a; --erro: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: "Segoe UI", system-ui, sans-serif;
+    background: var(--bg); color: var(--texto);
+  }
+  header {
+    background: var(--primaria); color: #fff; padding: 14px 24px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  header h1 { font-size: 20px; margin: 0; }
+  #badge-modo {
+    font-size: 12px; background: rgba(255,255,255,.2); border-radius: 999px;
+    padding: 3px 10px; text-transform: uppercase; letter-spacing: .5px;
+  }
+  main {
+    display: grid; grid-template-columns: 320px 1fr; gap: 20px;
+    padding: 20px 24px; max-width: 1200px; margin: 0 auto;
+  }
+  @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--card); border: 1px solid var(--borda);
+    border-radius: 10px; padding: 16px; margin-bottom: 20px;
+  }
+  .card h2 { font-size: 15px; margin: 0 0 12px; }
+  input[type=text], select {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--borda);
+    border-radius: 6px; font-size: 14px;
+  }
+  button {
+    background: var(--primaria); color: #fff; border: 0; border-radius: 6px;
+    padding: 8px 14px; font-size: 13px; cursor: pointer;
+  }
+  button:hover { background: var(--primaria-escura); }
+  button.secundario { background: #eef0f5; color: var(--texto); }
+  button.perigo { background: transparent; color: var(--erro); padding: 2px 6px; }
+  .linha { display: flex; gap: 8px; margin-top: 8px; }
+  .linha input { flex: 1; }
+  ul.lista { list-style: none; padding: 0; margin: 0; }
+  ul.lista li {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 6px; border-bottom: 1px solid var(--borda); font-size: 14px;
+  }
+  ul.lista li:last-child { border-bottom: 0; }
+  ul.lista li .abrir { cursor: pointer; color: var(--primaria); }
+  ul.lista li .abrir:hover { text-decoration: underline; }
+  .vazio { color: var(--suave); font-size: 13px; padding: 6px 0; }
+  #acoes-conteudo { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  #resultado {
+    border: 1px solid var(--borda); border-radius: 8px; padding: 16px;
+    min-height: 120px; font-size: 14px; line-height: 1.55; background: #fafbff;
+  }
+  #resultado pre { white-space: pre-wrap; font-family: inherit; margin: 0; }
+  .flashcard {
+    border: 1px solid var(--borda); border-left: 4px solid var(--primaria);
+    border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; background: #fff;
+  }
+  .flashcard .resposta { color: var(--suave); margin-top: 6px; }
+  .questao { margin-bottom: 16px; }
+  .questao .alternativa {
+    display: block; width: 100%; text-align: left; margin-top: 6px;
+    background: #fff; color: var(--texto); border: 1px solid var(--borda);
+  }
+  .questao .alternativa.certa { border-color: var(--ok); background: #f0fdf4; }
+  .questao .alternativa.errada { border-color: var(--erro); background: #fef2f2; }
+  .check-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 14px; }
+  #aviso {
+    position: fixed; bottom: 20px; right: 20px; max-width: 360px;
+    background: var(--erro); color: #fff; padding: 12px 16px; border-radius: 8px;
+    font-size: 13px; display: none; z-index: 10;
+  }
+  #aviso.ok { background: var(--ok); }
+  #carregando { color: var(--suave); font-size: 13px; display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📚 PrimeStudy</h1>
+  <span id="badge-modo">…</span>
+</header>
+
+<main>
+  <!-- ── Coluna lateral ───────────────────────────────────────────── -->
+  <div>
+    <div class="card">
+      <h2>Matérias</h2>
+      <ul class="lista" id="lista-materias"></ul>
+      <div class="linha">
+        <input type="text" id="nova-materia" placeholder="Nova matéria (ex.: Cálculo I)">
+        <button onclick="criarMateria()">Criar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Novo estudo (PDF)</h2>
+      <input type="file" id="arquivo-pdf" accept="application/pdf">
+      <div class="linha">
+        <select id="materia-do-upload"><option value="">Sem matéria</option></select>
+        <button onclick="enviarPDF()">Enviar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Meus estudos</h2>
+      <ul class="lista" id="lista-estudos"></ul>
+    </div>
+  </div>
+
+  <!-- ── Área principal ───────────────────────────────────────────── -->
+  <div>
+    <div class="card" id="painel-estudo">
+      <h2 id="titulo-estudo">Selecione ou crie um estudo</h2>
+      <div id="acoes-conteudo" style="display:none">
+        <button onclick="gerar('resumo')">Resumo</button>
+        <button onclick="gerar('resumo_menor')">Resumo curto</button>
+        <button onclick="gerar('topicos')">Tópicos</button>
+        <button onclick="gerar('flashcard')">Flashcards</button>
+        <button onclick="gerar('questoes')">Quiz</button>
+        <button onclick="gerar('mapa')">Mapa mental</button>
+        <button class="secundario" onclick="abrirChecklist()">Checklist</button>
+      </div>
+      <p id="carregando">Gerando conteúdo…</p>
+      <div id="resultado"><span class="vazio">O conteúdo gerado aparece aqui.</span></div>
+    </div>
+  </div>
+</main>
+
+<div id="aviso"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let estudoAtual = null;
+
+// ── infra ────────────────────────────────────────────────────────────
+async function api(caminho, opcoes = {}) {
+  const resp = await fetch(caminho, opcoes);
+  if (resp.status === 204) return null;
+  const corpo = await resp.json().catch(() => ({}));
+  if (!resp.ok) throw new Error(corpo.erro || `Erro HTTP ${resp.status}`);
+  return corpo;
+}
+
+function avisar(mensagem, ok = false) {
+  const el = $("aviso");
+  el.textContent = mensagem;
+  el.className = ok ? "ok" : "";
+  el.style.display = "block";
+  setTimeout(() => { el.style.display = "none"; }, 4000);
+}
+
+// ── boot ─────────────────────────────────────────────────────────────
+async function iniciar() {
+  const saude = await api("/api/health");
+  $("badge-modo").textContent = "modo " + saude.modo;
+  await api("/api/sessao", { method: "POST" });   // demo: cria sessão direto
+  await Promise.all([carregarMaterias(), carregarEstudos()]);
+}
+
+// ── matérias ─────────────────────────────────────────────────────────
+async function carregarMaterias() {
+  const { materias } = await api("/api/materias");
+  const ul = $("lista-materias");
+  const select = $("materia-do-upload");
+  ul.innerHTML = "";
+  select.innerHTML = '<option value="">Sem matéria</option>';
+  if (!materias.length) ul.innerHTML = '<li class="vazio">Nenhuma matéria ainda.</li>';
+  for (const m of materias) {
+    const li = document.createElement("li");
+    li.innerHTML = `<span>${m.nome} <small style="color:var(--suave)">(${m.total_estudos})</small></span>`;
+    const btn = document.createElement("button");
+    btn.className = "perigo"; btn.textContent = "✕"; btn.title = "Remover matéria";
+    btn.onclick = () => removerMateria(m.id);
+    li.appendChild(btn);
+    ul.appendChild(li);
+    const opt = document.createElement("option");
+    opt.value = m.id; opt.textContent = m.nome;
+    select.appendChild(opt);
+  }
+}
+
+async function criarMateria() {
+  const nome = $("nova-materia").value.trim();
+  if (!nome) return avisar("Digite o nome da matéria.");
+  try {
+    await api("/api/materias", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome }),
+    });
+    $("nova-materia").value = "";
+    avisar("Matéria criada.", true);
+    carregarMaterias();
+  } catch (e) { avisar(e.message); }
+}
+
+async function removerMateria(id) {
+  try {
+    await api(`/api/materias/${id}`, { method: "DELETE" });
+    carregarMaterias(); carregarEstudos();
+  } catch (e) { avisar(e.message); }
+}
+
+// ── estudos ──────────────────────────────────────────────────────────
+async function carregarEstudos() {
+  const { estudos } = await api("/api/estudos");
+  const ul = $("lista-estudos");
+  ul.innerHTML = "";
+  if (!estudos.length) ul.innerHTML = '<li class="vazio">Envie um PDF para começar.</li>';
+  for (const e of estudos) {
+    const li = document.createElement("li");
+    const nome = document.createElement("span");
+    nome.className = "abrir"; nome.textContent = e.nome;
+    nome.onclick = () => abrirEstudo(e.id, e.nome);
+    const btn = document.createElement("button");
+    btn.className = "perigo"; btn.textContent = "✕"; btn.title = "Remover estudo";
+    btn.onclick = () => removerEstudo(e.id);
+    li.appendChild(nome); li.appendChild(btn);
+    ul.appendChild(li);
+  }
+}
+
+async function enviarPDF() {
+  const arquivo = $("arquivo-pdf").files[0];
+  if (!arquivo) return avisar("Escolha um arquivo PDF.");
+  const form = new FormData();
+  form.append("arquivo", arquivo);
+  const materiaId = $("materia-do-upload").value;
+  if (materiaId) form.append("materia_id", materiaId);
+  try {
+    const r = await api("/api/estudos", { method: "POST", body: form });
+    $("arquivo-pdf").value = "";
+    avisar("Estudo criado.", true);
+    await Promise.all([carregarEstudos(), carregarMaterias()]);
+    abrirEstudo(r.estudo_id, arquivo.name);
+  } catch (e) { avisar(e.message); }
+}
+
+async function removerEstudo(id) {
+  try {
+    await api(`/api/estudos/${id}`, { method: "DELETE" });
+    if (estudoAtual === id) {
+      estudoAtual = null;
+      $("titulo-estudo").textContent = "Selecione ou crie um estudo";
+      $("acoes-conteudo").style.display = "none";
+      $("resultado").innerHTML = '<span class="vazio">O conteúdo gerado aparece aqui.</span>';
+    }
+    carregarEstudos(); carregarMaterias();
+  } catch (e) { avisar(e.message); }
+}
+
+function abrirEstudo(id, nome) {
+  estudoAtual = id;
+  $("titulo-estudo").textContent = "📄 " + nome;
+  $("acoes-conteudo").style.display = "flex";
+  $("resultado").innerHTML = '<span class="vazio">Escolha um tipo de conteúdo acima.</span>';
+}
+
+// ── geração de conteúdo ──────────────────────────────────────────────
+async function gerar(tipo) {
+  if (!estudoAtual) return;
+  $("carregando").style.display = "block";
+  try {
+    const r = await api(`/api/estudos/${estudoAtual}/conteudo`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tipo }),
+    });
+    renderizar(r.tipo_render, r.conteudo);
+  } catch (e) { avisar(e.message); }
+  finally { $("carregando").style.display = "none"; }
+}
+
+function renderizar(tipo, conteudo) {
+  const area = $("resultado");
+  if (tipo === "questoes")        renderizarQuiz(area, conteudo);
+  else if (tipo === "flashcard")  renderizarFlashcards(area, conteudo);
+  else if (tipo === "mapa")       area.innerHTML = `<pre>${escapar(conteudo)}</pre>`;
+  else                            area.innerHTML = conteudo;   // resumo/tópicos vêm em HTML
+}
+
+function renderizarFlashcards(area, texto) {
+  area.innerHTML = "";
+  const blocos = texto.split(/\nP:/).map((b, i) => (i === 0 ? b : "P:" + b));
+  for (const bloco of blocos) {
+    const p = (bloco.match(/P:\s*([^\n]+)/) || [])[1];
+    const r = (bloco.match(/R:\s*([^\n]+)/) || [])[1];
+    if (!p) continue;
+    const card = document.createElement("div");
+    card.className = "flashcard";
+    card.innerHTML = `<b>${escapar(p)}</b><div class="resposta" style="display:none">${escapar(r || "")}</div>
+                      <button class="secundario" style="margin-top:8px">Mostrar resposta</button>`;
+    card.querySelector("button").onclick = (ev) => {
+      card.querySelector(".resposta").style.display = "block";
+      ev.target.remove();
+    };
+    area.appendChild(card);
+  }
+  if (!area.children.length) area.innerHTML = `<pre>${escapar(texto)}</pre>`;
+}
+
+function renderizarQuiz(area, json) {
+  let questoes;
+  try { questoes = JSON.parse(json); } catch { area.innerHTML = `<pre>${escapar(json)}</pre>`; return; }
+  area.innerHTML = "";
+  questoes.forEach((q, n) => {
+    const div = document.createElement("div");
+    div.className = "questao";
+    div.innerHTML = `<b>${n + 1}. ${escapar(q.pergunta)}</b>`;
+    q.alternativas.forEach((alt, i) => {
+      const btn = document.createElement("button");
+      btn.className = "alternativa";
+      btn.textContent = alt;
+      btn.onclick = () => {
+        div.querySelectorAll(".alternativa").forEach((b, j) => {
+          b.disabled = true;
+          if (j === q.correta) b.classList.add("certa");
+        });
+        if (i !== q.correta) btn.classList.add("errada");
+        if (q.explicacao) {
+          const exp = document.createElement("p");
+          exp.style.cssText = "color:var(--suave);font-size:13px";
+          exp.textContent = "💡 " + q.explicacao;
+          div.appendChild(exp);
+        }
+      };
+      div.appendChild(btn);
+    });
+    area.appendChild(div);
+  });
+}
+
+// ── checklist ────────────────────────────────────────────────────────
+async function abrirChecklist() {
+  if (!estudoAtual) return;
+  $("carregando").style.display = "block";
+  try {
+    const { itens } = await api(`/api/estudos/${estudoAtual}/checklist`);
+    const area = $("resultado");
+    area.innerHTML = "<b>Checklist de tópicos</b>";
+    itens.forEach((item) => {
+      const div = document.createElement("div");
+      div.className = "check-item";
+      const cb = document.createElement("input");
+      cb.type = "checkbox"; cb.checked = item.feito;
+      div.appendChild(cb);
+      div.appendChild(document.createTextNode(item.texto));
+      area.appendChild(div);
+    });
+    const salvar = document.createElement("button");
+    salvar.textContent = "Salvar checklist";
+    salvar.style.marginTop = "12px";
+    salvar.onclick = async () => {
+      const atualizados = [...area.querySelectorAll(".check-item")].map((d) => ({
+        texto: d.textContent,
+        feito: d.querySelector("input").checked,
+      }));
+      try {
+        await api(`/api/estudos/${estudoAtual}/checklist`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ itens: atualizados }),
+        });
+        avisar("Checklist salva.", true);
+      } catch (e) { avisar(e.message); }
+    };
+    area.appendChild(salvar);
+  } catch (e) { avisar(e.message); }
+  finally { $("carregando").style.display = "none"; }
+}
+
+// ── util ─────────────────────────────────────────────────────────────
+function escapar(texto) {
+  const div = document.createElement("div");
+  div.textContent = texto ?? "";
+  return div.innerHTML;
+}
+
+iniciar().catch((e) => avisar("Falha ao iniciar: " + e.message));
+</script>
+</body>
+</html>

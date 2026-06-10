@@ -9,6 +9,7 @@ from typing import Optional
 
 from src.domain.entities.estudo import Estudo, ItemChecklist
 from src.domain.entities.materia import Materia
+from src.domain.exceptions import RecursoNaoEncontradoError
 from src.domain.ports.estudo_repository import IEstudoRepository
 
 
@@ -29,6 +30,8 @@ class InMemoryEstudoRepo(IEstudoRepository):
 
     def salvar_estudo(self, uid: str, estudo: Estudo) -> str:
         estudo.id = self._proximo_id("estudo")
+        # mesmo comportamento do FirestoreEstudoRepo (LSP): carimba a criação
+        estudo.criado_em = estudo.criado_em or datetime.now(timezone.utc)
         self._estudos.setdefault(uid, {})[estudo.id] = estudo
         self._recontar_materias(uid)
         return estudo.id
@@ -37,9 +40,9 @@ class InMemoryEstudoRepo(IEstudoRepository):
         return self._estudos.get(uid, {}).get(estudo_id)
 
     def listar_estudos_recentes(self, uid: str, limite: int = 50) -> list[Estudo]:
+        inicio_dos_tempos = datetime.min.replace(tzinfo=timezone.utc)
         estudos = list(self._estudos.get(uid, {}).values())
-        _EPOCH = datetime.min.replace(tzinfo=timezone.utc)
-        estudos.sort(key=lambda e: e.criado_em or _EPOCH, reverse=True)
+        estudos.sort(key=lambda e: e.criado_em or inicio_dos_tempos, reverse=True)
         return estudos[:limite]
 
     def atualizar_conteudo_estudo(self, uid: str, estudo_id: str, tipo: str, valor: str) -> None:
@@ -93,7 +96,7 @@ class InMemoryEstudoRepo(IEstudoRepository):
     def _exigir_estudo(self, uid: str, estudo_id: str) -> Estudo:
         estudo = self.buscar_estudo(uid, estudo_id)
         if estudo is None:
-            raise ValueError(f"Estudo '{estudo_id}' não encontrado.")
+            raise RecursoNaoEncontradoError(f"Estudo '{estudo_id}' não encontrado.")
         return estudo
 
     def _recontar_materias(self, uid: str) -> None:
