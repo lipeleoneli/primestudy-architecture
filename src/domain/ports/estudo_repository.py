@@ -5,6 +5,10 @@ Define o contrato que qualquer implementação de persistência de estudos
 deve satisfazer. O domínio conhece apenas esta interface — jamais o Firestore.
 
 SOLID — DIP: casos de uso dependem desta abstração, não da implementação concreta.
+SOLID — LSP: o contrato especifica o comportamento para recurso inexistente —
+métodos de atualização lançam RecursoNaoEncontradoError. Toda implementação
+(Firestore, memória) deve honrar isso, para que sejam intercambiáveis sem
+alterar o comportamento observado pelos casos de uso.
 
 Nota sobre ISP: este é o contrato do *Repository* (padrão de Fowler) para a
 fronteira de persistência. Por agregar dois agregados próximos (Estudo e
@@ -40,19 +44,39 @@ class IEstudoRepository(ABC):
 
     @abstractmethod
     def atualizar_conteudo_estudo(self, uid: str, estudo_id: str, tipo: str, valor: str) -> None:
-        """Persiste o conteúdo gerado (resumo, quiz etc.) em um estudo existente."""
+        """
+        Persiste o conteúdo gerado (resumo, quiz etc.) em um estudo existente.
+
+        Raises:
+            RecursoNaoEncontradoError: Se o estudo não existir.
+        """
 
     @abstractmethod
     def atualizar_checklist(self, uid: str, estudo_id: str, itens: list[ItemChecklist]) -> None:
-        """Persiste o estado atualizado da checklist de um estudo."""
+        """
+        Persiste o estado atualizado da checklist de um estudo.
+
+        Raises:
+            RecursoNaoEncontradoError: Se o estudo não existir.
+        """
 
     @abstractmethod
     def atualizar_materia_do_estudo(self, uid: str, estudo_id: str, materia_id: Optional[str]) -> None:
-        """Vincula ou desvincula um estudo de uma matéria (None = desvincular)."""
+        """
+        Vincula ou desvincula um estudo de uma matéria (None = desvincular).
+
+        Raises:
+            RecursoNaoEncontradoError: Se o estudo não existir.
+        """
 
     @abstractmethod
     def renomear_estudo(self, uid: str, estudo_id: str, novo_nome: str) -> None:
-        """Atualiza o nome de um estudo."""
+        """
+        Atualiza o nome de um estudo.
+
+        Raises:
+            RecursoNaoEncontradoError: Se o estudo não existir.
+        """
 
     @abstractmethod
     def deletar_estudo(self, uid: str, estudo_id: str) -> None:

@@ -46,8 +46,3 @@ class Estudo:
     def atualizar_conteudo(self, tipo: str, valor: str) -> None:
         """Armazena o resultado gerado pela IA para um tipo de conteúdo."""
         self.conteudo[tipo] = valor
-
-    def marcar_item_checklist(self, indice: int, feito: bool) -> None:
-        """Atualiza o estado de conclusão de um item da checklist."""
-        if 0 <= indice < len(self.checklist):
-            self.checklist[indice].feito = feito
